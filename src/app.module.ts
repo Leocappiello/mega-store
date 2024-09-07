@@ -15,9 +15,10 @@ import { ActivitiesModule } from './activities/activities.module';
 import { ShoppingCartModule } from './shopping-cart/shopping-cart.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { DiscountsModule } from './discounts/discounts.module';
+import { RoleModule } from './role/role.module';
 
 @Module({
-  imports: [AuthModule, ProductsModule, CategoriesModule, OrdersModule, PaymentsModule, TransactionsModule, ShipmentsModule, StoreModule, SupportModule, UsersModule, ActivitiesModule, ShoppingCartModule, NotificationsModule, DiscountsModule],
+  imports: [AuthModule, ProductsModule, CategoriesModule, OrdersModule, PaymentsModule, TransactionsModule, ShipmentsModule, StoreModule, SupportModule, UsersModule, ActivitiesModule, ShoppingCartModule, NotificationsModule, DiscountsModule, RoleModule],
   controllers: [AppController],
   providers: [AppService],
 })

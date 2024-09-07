@@ -1,0 +1,12 @@
+model Product {
+    id String @id @default(uuid())
+    name String
+    price Float
+    description String
+    
+    status Status @relation(fields: [statusId], references: [id])
+    statusId Int 
+
+    owner Users? @relation(fields: [ownerId], references: [id])
+    ownerId String
+}
