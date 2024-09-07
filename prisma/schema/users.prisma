@@ -1,0 +1,9 @@
+model Users {
+    id String @id @default(uuid())
+    username String @unique
+    password String
+    email String @unique
+    createdAt DateTime @default(now())
+    roles Role[] @relation("UserRoles")
+    products Product[]
+}
