@@ -1,9 +1,15 @@
+enum UserRole {
+    ADMIN
+    OWNER
+    CLIENT
+}
+
 model Users {
     id String @id @default(uuid())
     username String @unique
     password String
     email String @unique
     createdAt DateTime @default(now())
-    roles Role[] @relation("UserRoles")
+    role UserRole @default(CLIENT)
     products Product[]
 }

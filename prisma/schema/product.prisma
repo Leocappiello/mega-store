@@ -5,8 +5,11 @@ model Product {
     description String
     
     status Status @relation(fields: [statusId], references: [id])
-    statusId Int 
+    statusId Int
 
     owner Users? @relation(fields: [ownerId], references: [id])
     ownerId String
+
+    order Order? @relation(fields: [orderId], references: [id])
+    orderId String
 }
