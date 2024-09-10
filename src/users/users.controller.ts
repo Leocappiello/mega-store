@@ -6,17 +6,16 @@ import {
   Param,
   Post,
   Put,
-  UseGuards,
+  Query,
 } from '@nestjs/common';
 import { Prisma, Users } from '@prisma/client';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Public } from 'src/auth/guards/public.key';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/role.enum';
 import { UsersService } from './users.service';
 
 @Controller('users')
-@UseGuards(RolesGuard)
+// @UseGuards(RolesGuard)
 @Roles(Role.CLIENT)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -24,7 +23,7 @@ export class UsersController {
   @Post()
   @Public()
   async create(@Body() userData: Prisma.UsersCreateInput): Promise<Users> {
-    return await this.usersService.create(userData);
+    return await this.usersService.createClient(userData);
   }
 
   @Get(':id')
@@ -46,5 +45,12 @@ export class UsersController {
     } catch (error) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  @Public()
+  @Post('activate')
+  activate(@Query('token') token: string) {
+    console.log(token);
+    return this.usersService.activateUser(token);
   }
 }

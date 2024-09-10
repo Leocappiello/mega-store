@@ -1,0 +1,14 @@
+model RolePermission {
+    id String @id @default(uuid())
+    name String @unique
+    description String?
+    //
+    role Role @relation(fields: [roleId], references: [id])
+    roleId String
+
+    //
+    permission Permission @relation(fields: [permissionId], references: [id])
+    permissionId String
+
+    @@unique([roleId, permissionId]) // avoid duplicates
+}

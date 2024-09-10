@@ -1,0 +1,7 @@
+model Images {
+    id String @id @default(uuid())
+    imageUrl String
+    
+    product Product @relation(fields: [productId], references: [id])
+    productId String
+}

@@ -1,0 +1,10 @@
+model LoginLog {
+    id String @id @default(uuid())
+    timestamp DateTime @default(now())
+    ipAddress String?
+    userAgent String?
+
+    //
+    userId String
+    user Users @relation(fields: [userId], references: [id])
+}

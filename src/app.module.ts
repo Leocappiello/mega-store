@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { CategoriesModule } from './categories/categories.module';
 import { DiscountsModule } from './discounts/discounts.module';
+import { MailModule } from './mail/mail.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
@@ -19,6 +20,7 @@ import { StoreModule } from './store/store.module';
 import { SupportModule } from './support/support.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
+import { UtilsModule } from './utils/utils.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { UsersModule } from './users/users.module';
       }),
       inject: [ConfigService],
     }),
+    MailModule,
+    UtilsModule,
   ],
   controllers: [],
   providers: [
