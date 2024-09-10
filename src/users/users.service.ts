@@ -1,13 +1,25 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Prisma, Users } from '@prisma/client';
 import { hash } from 'bcryptjs';
+import { MailServices } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma.service';
+import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private utilsService: UtilsService,
+    private jwtService: JwtService,
+    private mailService: MailServices,
+  ) {}
 
-  async create(data: Prisma.UsersCreateInput): Promise<Users> {
+  async createClient(data: Prisma.UsersCreateInput): Promise<Users> {
     const existUser = await this.prisma.users.findFirst({
       where: {
         OR: [
@@ -24,12 +36,16 @@ export class UsersService {
 
     const hashedPassword = await hash(data.password, 10);
     data.password = hashedPassword;
-    data.role = 'CLIENT';
+    data.role = null;
+    data.codeVerification = this.utilsService.generateRandomCodeVerification(
+      data.id,
+    );
 
     const result = await this.prisma.users.create({
       data,
     });
     delete result.password;
+    await this.mailService.sendMail(data.email, 'Activa tu cuenta', '', '');
     return result;
   }
 
@@ -50,5 +66,28 @@ export class UsersService {
       data,
       where,
     });
+  }
+
+  async activateUser(token: string) {
+    try {
+      const { userId } = this.jwtService.decode(token);
+      const result = await this.prisma.users.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+      if (!result) throw new NotFoundException('User not found');
+
+      await this.prisma.users.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          active: true,
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
   }
 }

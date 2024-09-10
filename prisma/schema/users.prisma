@@ -1,8 +1,8 @@
-enum UserRole {
-    ADMIN
-    OWNER
-    CLIENT
-}
+// enum UserRole {
+//     ADMIN
+//     OWNER
+//     CLIENT
+// }
 
 model Users {
     id String @id @default(uuid())
@@ -10,6 +10,27 @@ model Users {
     password String
     email String @unique
     createdAt DateTime @default(now())
-    role UserRole @default(CLIENT)
+    // role UserRole @default(CLIENT)
     products Product[]
+    active Boolean @default(false)
+    
+    //
+    recoverPassword Boolean @default(false)
+    codeRecover String?
+
+    //
+    address Address[]
+    phoneNumber String?
+
+    //
+    role Role @relation(fields: [roleId], references: [id])
+    roleId String
+
+    //
+    logins LoginLog[]
+
+    //
+    dataChanges DataChangeLog[]
+    //
+    codeVerification String?
 }
