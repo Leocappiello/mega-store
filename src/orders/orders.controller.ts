@@ -1,20 +1,36 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
+import { Request } from 'express';
+import { FindOrderDTO } from './dto/find-orders.dto';
 import { OrdersService } from './orders.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
+  create(@Body() createOrderDto: any) {
     return this.ordersService.create(createOrderDto);
   }
 
   @Get()
-  findAll() {
-    return this.ordersService.findAll();
+  async findAll(
+    @Req() request: Request,
+    @Query() query: FindOrderDTO,
+    // @Query('skip', new ParseIntPipe({ errorHttpStatusCode: 400 })) skip: number,
+    // @Query('take', new ParseIntPipe({ errorHttpStatusCode: 400 })) take: number,
+  ) {
+    const { skip, take } = query;
+    return await this.ordersService.findAll(request.user, +skip, +take);
   }
 
   @Get(':id')
@@ -23,7 +39,7 @@ export class OrdersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
+  update(@Param('id') id: string, @Body() updateOrderDto: any) {
     return this.ordersService.update(+id, updateOrderDto);
   }
 

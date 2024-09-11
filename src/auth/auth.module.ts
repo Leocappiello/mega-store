@@ -20,6 +20,7 @@ import { LocalStrategy } from './strategies/local.strategy';
     UtilsService,
     ConfigService,
     MailServices,
+    PrismaService,
   ],
 })
 export class AuthModule {}

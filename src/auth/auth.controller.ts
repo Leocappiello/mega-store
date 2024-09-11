@@ -12,6 +12,6 @@ export class AuthController {
   @Public()
   @Post('login')
   async login(@Req() req: Request) {
-    return this.authService.login(req.user);
+    return this.authService.login(req.user, req.ip, req.headers['user-agent']);
   }
 }
