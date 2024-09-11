@@ -6,6 +6,7 @@
 
 model Users {
     id String @id @default(uuid())
+    name String
     username String @unique
     password String
     email String @unique
