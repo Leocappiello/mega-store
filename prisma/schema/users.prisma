@@ -34,4 +34,7 @@ model Users {
     dataChanges DataChangeLog[]
     //
     codeVerification String?
+    
+    isTwoFactorAuthEnabled Boolean @default(false)
+    twoFactorSecret String?
 }

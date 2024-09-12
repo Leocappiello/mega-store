@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
+import * as speakeasy from 'speakeasy';
 import { PrismaService } from 'src/prisma.service';
 import { UsersService } from 'src/users/users.service';
 
@@ -38,5 +39,52 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  async generateTwoFactorSecret(userId: string) {
+    try {
+      await this.prismaService.users.findFirstOrThrow({
+        where: {
+          id: userId,
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+    const secret = speakeasy.generateSecret({
+      name: `MegaStore - ${userId}`,
+    });
+    await this.prismaService.users.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        isTwoFactorAuthEnabled: true,
+        twoFactorSecret: secret,
+      },
+    });
+  }
+
+  async verifyTwoFactorCode(userId: string, code: string) {
+    try {
+      const user = await this.prismaService.users.findFirstOrThrow({
+        where: {
+          id: userId,
+          isTwoFactorAuthEnabled: true,
+        },
+      });
+
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token: code,
+      });
+
+      if (!verified) throw new Error('Código de verificación inválido.');
+
+      return HttpStatus.OK;
+    } catch (error) {
+      throw new NotFoundException('User not found or two-factor not enabled');
+    }
   }
 }

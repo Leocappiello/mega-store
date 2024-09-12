@@ -7,6 +7,7 @@ import { UsersService } from 'src/users/users.service';
 import { UtilsService } from 'src/utils/utils.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
@@ -21,6 +22,7 @@ import { LocalStrategy } from './strategies/local.strategy';
     ConfigService,
     MailServices,
     PrismaService,
+    JwtStrategy,
   ],
 })
 export class AuthModule {}

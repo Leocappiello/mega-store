@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import { ActivitiesModule } from './activities/activities.module';
 import { AuthModule } from './auth/auth.module';
-import { AuthGuard } from './auth/guards/auth.guard';
+import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { CategoriesModule } from './categories/categories.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { MailModule } from './mail/mail.module';
@@ -39,6 +40,7 @@ import { UtilsModule } from './utils/utils.module';
     NotificationsModule,
     DiscountsModule,
     RoleModule,
+    PassportModule,
     ConfigModule.forRoot(),
     JwtModule.registerAsync({
       global: true,
@@ -61,8 +63,10 @@ import { UtilsModule } from './utils/utils.module';
     PrismaService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      // useClass: AuthGuard,
+      useClass: JwtAuthGuard,
     },
   ],
+  exports: [PassportModule, JwtModule],
 })
 export class AppModule {}
