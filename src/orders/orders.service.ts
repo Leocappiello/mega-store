@@ -10,10 +10,10 @@ export class OrdersService {
   }
 
   async findAll(user, skip = 0, take = 5) {
-    if (!user.userId) throw new NotFoundException('User not found');
+    if (!user.sub) throw new NotFoundException('User not found');
     return await this.prismaService.order.findMany({
       where: {
-        id: user.userId,
+        id: user.sub,
       },
       skip,
       take,

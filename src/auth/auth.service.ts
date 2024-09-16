@@ -14,7 +14,7 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOne({ username });
+    const user = await this.usersService.findOne(username);
     if (user && (await compare(pass, user.password))) {
       const { password, ...result } = user;
       return result;
@@ -27,11 +27,12 @@ export class AuthService {
       username: user.username,
       sub: user.id,
       role: user.role,
+      active: user.active,
     };
     await this.prismaService.loginLog.create({
       data: {
         ipAddress: ip,
-        timestamp: Date.now().toString(),
+        timestamp: new Date().toISOString(),
         userAgent: agent,
         userId: user.id,
       },
