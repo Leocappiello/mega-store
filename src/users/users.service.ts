@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -9,7 +10,6 @@ import { hash } from 'bcryptjs';
 import { MailServices } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma.service';
 import { UtilsService } from 'src/utils/utils.service';
-import { UpdateDTO } from './dto/update.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,7 +20,7 @@ export class UsersService {
     private mailService: MailServices,
   ) {}
 
-  async createClient(data: Prisma.UsersCreateInput): Promise<Users> {
+  async createClient(data: Prisma.UsersCreateInput): Promise<any> {
     const existUser = await this.prisma.users.findFirst({
       where: {
         OR: [
@@ -34,97 +34,218 @@ export class UsersService {
       },
     });
     if (existUser) throw new ConflictException('User already exists');
-
+    const { name, email, username } = data;
     const hashedPassword = await hash(data.password, 10);
-    data.password = hashedPassword;
-    data.role = null;
-    data.codeVerification = this.utilsService.generateRandomCodeVerification(
-      data.id,
-    );
 
+    const roleClient = await this.prisma.role.findFirstOrThrow({
+      where: {
+        name: 'USER',
+      },
+    });
     const result = await this.prisma.users.create({
-      data,
+      data: {
+        name,
+        username,
+        password: hashedPassword,
+        email,
+        codeVerification: this.utilsService.generateRandomCodeVerification(
+          data.id,
+        ),
+        active: false,
+        role: {
+          connect: {
+            id: roleClient.id,
+          },
+        },
+      },
     });
     delete result.password;
-    await this.mailService.sendMail(data.email, 'Activa tu cuenta', '', '');
+    // await this.mailService.sendMail(data.email, 'Activa tu cuenta', '', '');
     return result;
   }
 
-  findOne(
-    userWhereUniqueInput: Prisma.UsersWhereUniqueInput,
-  ): Promise<Users | null> {
-    return this.prisma.users.findUniqueOrThrow({
-      where: userWhereUniqueInput,
-    });
-  }
+  // findOne(
+  //   userWhereUniqueInput: Prisma.UsersWhereUniqueInput,
+  // ): Promise<Users | null> {
+  //   return this.prisma.users.findUniqueOrThrow({
+  //     where: userWhereUniqueInput,
+  //   });
+  // }
 
-  async updateUser(
-    /* params: {
-    where: Prisma.UsersWhereUniqueInput;
-    data: Prisma.UsersUpdateInput;
-  } */
-    user,
-    userData: UpdateDTO,
-    ip: string,
-    agent: any,
-  ): Promise<Users> {
-    const currentUser = await this.prisma.users.findUnique({
-      where: { id: user.userId },
-      include: { address: true },
-    });
-    const updateData: Prisma.UsersUpdateInput = {
-      ...userData,
-      address: userData.address
-        ? {
-            update: userData.address.map((address) => ({
-              where: { id: address.id, userId: user.userId },
-              data: {
-                street: address.street,
-                number: address.number,
-                description: address.description,
-              },
-            })),
-          }
-        : undefined,
-    };
-
-    const changes = [];
-
-    if (userData.name && userData.name !== currentUser.name) {
-      changes.push({
-        field: 'name',
-        prevValue: currentUser.name,
-        newValue: userData.name,
-      });
-    }
-
-    if (userData.email && userData.email !== currentUser.email) {
-      changes.push({
-        field: 'email',
-        prevValue: currentUser.email,
-        newValue: userData.email,
-      });
-    }
-
-    for (const change of changes) {
-      await this.prisma.dataChangeLog.create({
-        data: {
-          description: `Updated ${change.field}`,
-          ipAddress: ip,
-          userAgent: agent,
-          prevValue: change.prevValue,
-          newValue: change.newValue,
-          userId: user.userId, // ID del usuario al que pertenece el cambio
-        },
-      });
-    }
-
-    return await this.prisma.users.update({
-      data: updateData,
+  async findOne(emailOrUsername: string): Promise<Users | null> {
+    const user = await this.prisma.users.findFirst({
       where: {
-        id: user.userId,
+        OR: [
+          {
+            email: emailOrUsername,
+          },
+          {
+            username: emailOrUsername,
+          },
+          {
+            id: emailOrUsername,
+          },
+        ],
+      },
+      include: {
+        role: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
+    if (!user) throw new NotFoundException('User or email not found');
+    return user;
+  }
+
+  // async updateUser(
+  //   /* params: {
+  //   where: Prisma.UsersWhereUniqueInput;
+  //   data: Prisma.UsersUpdateInput;
+  // } */
+  //   user,
+  //   // userData: UpdateDTO,
+  //   data: Prisma.UsersUpdateInput,
+  //   ip: string,
+  //   agent: any,
+  // ): Promise<Users> {
+  //   const currentUser = await this.prisma.users.findUnique({
+  //     where: { id: user.userId },
+  //     include: { address: true },
+  //   });
+  //   const updateData: Prisma.UsersUpdateInput = {
+  //     ...data,
+  //     address: data.address
+  //       ? {
+  //           update: data.address.map((address) => ({
+  //             where: { id: address.id, userId: user.userId },
+  //             data: {
+  //               street: address.street,
+  //               number: address.number,
+  //               description: address.description,
+  //             },
+  //           })),
+  //         }
+  //       : undefined,
+  //   };
+
+  //   const changes = [];
+
+  //   if (data.name && data.name !== currentUser.name) {
+  //     changes.push({
+  //       field: 'name',
+  //       prevValue: currentUser.name,
+  //       newValue: data.name,
+  //     });
+  //   }
+
+  //   if (data.email && data.email !== currentUser.email) {
+  //     changes.push({
+  //       field: 'email',
+  //       prevValue: currentUser.email,
+  //       newValue: data.email,
+  //     });
+  //   }
+
+  //   for (const change of changes) {
+  //     await this.prisma.dataChangeLog.create({
+  //       data: {
+  //         description: `Updated ${change.field}`,
+  //         ipAddress: ip,
+  //         userAgent: agent,
+  //         prevValue: change.prevValue,
+  //         newValue: change.newValue,
+  //         userId: user.userId, // ID del usuario al que pertenece el cambio
+  //       },
+  //     });
+  //   }
+
+  //   return await this.prisma.users.update({
+  //     data: updateData,
+  //     where: {
+  //       id: user.userId,
+  //     },
+  //   });
+  // }
+
+  async updateUser(
+    currentUser: string,
+    userData: Prisma.UsersUpdateInput,
+    ipAddress: string,
+    userAgent: string,
+  ): Promise<Users> {
+    const existingUser = await this.prisma.users.findUnique({
+      where: { id: currentUser },
+      include: {
+        address: true,
+      },
+    });
+
+    if (!existingUser) throw new BadRequestException('El usuario no existe.');
+
+    const dataChangeLogs: Prisma.DataChangeLogCreateManyInput[] = [];
+
+    if (userData.name && userData.name !== existingUser.name) {
+      dataChangeLogs.push({
+        description: 'Cambio de nombre',
+        prevValue: existingUser.name,
+        newValue: userData.name as string,
+        userId: currentUser,
+        ipAddress,
+        userAgent,
+      });
+    }
+
+    if (userData.username && userData.username !== existingUser.username) {
+      dataChangeLogs.push({
+        description: 'Cambio de nombre de usuario',
+        prevValue: existingUser.username,
+        newValue: userData.username as string,
+        userId: currentUser,
+        ipAddress,
+        userAgent,
+      });
+    }
+
+    if (userData.email && userData.email !== existingUser.email) {
+      dataChangeLogs.push({
+        description: 'Cambio de correo electrónico',
+        prevValue: existingUser.email,
+        newValue: userData.email as string,
+        userId: currentUser,
+        ipAddress,
+        userAgent,
+      });
+    }
+
+    if (
+      userData.phoneNumber &&
+      userData.phoneNumber !== existingUser.phoneNumber
+    ) {
+      dataChangeLogs.push({
+        description: 'Cambio de numero telefonico',
+        prevValue: existingUser.phoneNumber,
+        newValue: userData.phoneNumber as string,
+        userId: currentUser,
+        ipAddress,
+        userAgent,
+      });
+    }
+
+    // await this.prisma.users.update({
+    const updatedUser = await this.prisma.users.update({
+      where: { id: currentUser },
+      data: userData,
+    });
+
+    if (dataChangeLogs.length > 0) {
+      await this.prisma.dataChangeLog.createMany({
+        data: dataChangeLogs,
+      });
+    }
+
+    return updatedUser;
   }
 
   async activateUser(token: string) {
@@ -158,39 +279,49 @@ export class UsersService {
         },
       });
       const token = this.jwtService.sign({
-        userId: userRecover.id,
+        sub: userRecover.id,
       });
-      await this.mailService.sendMail(
-        userRecover.email,
-        'Recover password',
-        `the code to recover your password is ${token}`,
-        '',
-      );
+      // await this.mailService.sendMail(
+      //   userRecover.email,
+      //   'Recover password',
+      //   `the code to recover your password is ${token}`,
+      //   'prueba',
+      // );
       await this.prisma.users.update({
         where: {
-          id: user,
+          id: userRecover.id,
         },
         data: {
           recoverPassword: true,
+          codeRecover: token,
         },
       });
     } catch (error) {
+      console.log(error);
       throw new NotFoundException('Error recovering password user');
     }
   }
 
   async changePassword(code: string, pass: string) {
-    const { id } = this.jwtService.decode(code);
+    const { sub } = this.jwtService.decode(code);
     try {
+      const user = await this.prisma.users.findFirstOrThrow({
+        where: {
+          id: sub,
+          recoverPassword: true,
+          codeRecover: code,
+        },
+      });
       await this.prisma.users.update({
         where: {
-          id,
+          id: user.id,
         },
         data: {
           password: await hash(pass, 10),
+          recoverPassword: false,
+          codeRecover: null,
         },
       });
-
       return {
         message: 'Password updated successfully',
       };
