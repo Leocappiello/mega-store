@@ -10,6 +10,7 @@ import { hash } from 'bcryptjs';
 import { MailServices } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma.service';
 import { UtilsService } from 'src/utils/utils.service';
+import { ModifyRolesDTO } from './dto/modifyRoles.dto';
 
 @Injectable()
 export class UsersService {
@@ -340,5 +341,86 @@ export class UsersService {
     } catch (error) {
       throw new NotFoundException('User not found!');
     }
+  }
+
+  async getUserRoles(id: string) {
+    const user = await this.prisma.users.findFirstOrThrow({
+      where: {
+        id,
+      },
+      include: {
+        role: {
+          include: {
+            permissions: {
+              include: {
+                permission: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  async modifyUserRoles(id: string, roles: ModifyRolesDTO) {
+    //   const { roles: rolesArray } = roles;
+    //   const permissions = await this.prisma.rolePermission.findMany({
+    //     where: {
+    //       name: {
+    //         in: rolesArray,
+    //       },
+    //     },
+    //   });
+
+    //   if (!user) throw new NotFoundException('User not found');
+
+    //   console.log(permissions);
+    //   return;
+    // }
+    const { roles: permissions } = roles;
+
+    // 1. Obtener todos los roles asociados con los permisos
+    const rolePermissions = await this.prisma.rolePermission.findMany({
+      where: {
+        permissionId: {
+          in: (
+            await this.prisma.permission.findMany({
+              where: {
+                name: {
+                  in: permissions, // Lista de nombres de permisos
+                },
+              },
+              select: {
+                id: true, // Solo selecciona el ID de los permisos
+              },
+            })
+          ).map((p) => p.id), // Extrae solo los IDs de los permisos
+        },
+      },
+      select: {
+        roleId: true,
+      },
+    });
+
+    // 2. Extraer los IDs únicos de los roles
+    const roleIds = Array.from(new Set(rolePermissions.map((rp) => rp.roleId)));
+
+    // 3. Si la relación es uno a uno, deberías tomar el primer `roleId` en lugar de un array
+    const newRoleId = roleIds[0]; // Supongo que el usuario solo tendrá un rol
+
+    // 4. Actualizar el campo `roleId` del usuario directamente
+    const updatedUser = await this.prisma.users.update({
+      where: { id },
+      data: {
+        roleId: newRoleId,
+      },
+      include: {
+        role: true,
+      },
+    });
+
+    return updatedUser;
   }
 }

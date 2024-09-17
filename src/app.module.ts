@@ -63,7 +63,6 @@ import { UtilsModule } from './utils/utils.module';
     PrismaService,
     {
       provide: APP_GUARD,
-      // useClass: AuthGuard,
       useClass: JwtAuthGuard,
     },
   ],

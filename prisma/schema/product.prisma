@@ -9,10 +9,13 @@ model Product {
     statusId Int
 
     owner Users? @relation(fields: [ownerId], references: [id])
-    ownerId String
+    ownerId String?
 
     order Order? @relation(fields: [orderId], references: [id])
-    orderId String
+    orderId String?
 
     imagesUrls Images[]
+
+    subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
+    subcategoryId String?
 }
