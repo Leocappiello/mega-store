@@ -1,10 +1,10 @@
 import {
+  IsArray,
   IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Min,
 } from 'class-validator';
 
@@ -26,8 +26,14 @@ export class CreateProductDto {
   @IsInt()
   quantity: number;
 
-  @IsUUID()
-  ownerId: string;
+  @IsOptional()
+  @IsString()
+  subcategory: string;
 
-  
+  // @IsUUID()
+  // ownerId: string;
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  imageUrls?: string[];
 }

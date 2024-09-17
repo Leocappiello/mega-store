@@ -8,13 +8,16 @@ import {
   Put,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { Prisma, Users } from '@prisma/client';
 import { Request } from 'express';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Public } from 'src/auth/guards/public.key';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/role.enum';
 import { ChangePassDTO } from './dto/ChangePass.dto';
+import { ModifyRolesDTO } from './dto/modifyRoles.dto';
 import { UsersService } from './users.service';
 
 interface JwtPayload {
@@ -77,7 +80,7 @@ export class UsersController {
     return await this.usersService.recoverPassword(userOrEmail);
   }
 
-  @Get('/dataChanges')
+  @Get('dataChanges')
   async getChanges(@Req() request: Request) {
     return await this.usersService.getDataChanges(request.user.sub);
   }
@@ -90,5 +93,23 @@ export class UsersController {
     } catch (error) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('roles/:id')
+  async getUserRoles(@Req() request: Request, @Param('id') id: string) {
+    return await this.usersService.getUserRoles(id);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Put('roles/:id')
+  async modifyUserRoles(
+    @Req() request: Request,
+    @Body() roles: ModifyRolesDTO,
+    @Param('id') id: string,
+  ) {
+    return await this.usersService.modifyUserRoles(id, roles);
   }
 }

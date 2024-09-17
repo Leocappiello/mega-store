@@ -4,11 +4,13 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 
 import { JwtAuthGuard } from './guards/jwt.guard';
+import { Public } from './guards/public.key';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(@Req() req: Request) {

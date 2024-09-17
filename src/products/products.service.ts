@@ -7,11 +7,80 @@ import { UpdateProductDto } from './dto/update-product.dto';
 export class ProductsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto) {
-    // return await this.prismaService.product.create({
-    //   data: {
-    //   }
-    // });
+  async create(createProductDto: CreateProductDto /* , userId: string */) {
+    const available = await this.prismaService.status.findFirst({
+      where: { name: 'AVAILABLE' },
+    });
+
+    if (!available) throw new Error('Status not found');
+
+    let subcategory = null;
+    if (createProductDto.subcategory) {
+      subcategory = await this.prismaService.subcategory.findFirst({
+        where: {
+          name: createProductDto.subcategory,
+        },
+        include: {
+          category: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+    }
+
+    const createdProduct = await this.prismaService.$transaction(
+      async (prisma) => {
+        const productData: any = {
+          name: createProductDto.name,
+          price: createProductDto.price,
+          description: createProductDto.description,
+          quantity: createProductDto.quantity,
+          status: {
+            connect: { id: available.id },
+          },
+        };
+
+        if (subcategory) {
+          productData.subcategory = {
+            connect: { id: subcategory.id },
+          };
+        }
+
+        const product = await prisma.product.create({
+          data: productData,
+          include: {
+            subcategory: {
+              select: {
+                name: true,
+                category: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (
+          createProductDto.imageUrls &&
+          createProductDto.imageUrls.length > 0
+        ) {
+          await prisma.images.createMany({
+            data: createProductDto.imageUrls.map((url) => ({
+              imageUrl: url,
+              productId: product.id,
+            })),
+          });
+        }
+
+        return product;
+      },
+    );
+
+    return createdProduct;
   }
 
   findAll() {
