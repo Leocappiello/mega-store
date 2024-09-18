@@ -18,4 +18,6 @@ model Product {
 
     subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
     subcategoryId String?
+
+    shoppingCarts ProductShoppingCart[]
 }

@@ -1,6 +1,7 @@
 model Order {
     id String @id @default(uuid())
-    owner String
+    owner Users @relation(fields: [ownerId], references: [id])
+    ownerId String
     createdAt DateTime @default(dbgenerated("now()"))
     products Product[]
     finalPrice Float

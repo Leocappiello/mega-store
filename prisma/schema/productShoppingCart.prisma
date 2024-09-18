@@ -1,0 +1,8 @@
+model ProductShoppingCart {
+    shoppingCartId String
+    productId String
+    shoppingCart ShoppingCart @relation(fields: [shoppingCartId], references: [id])
+    product Product @relation(fields: [productId], references: [id])
+
+    @@id([shoppingCartId, productId])
+}

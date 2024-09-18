@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { CreateOrderDTO } from './dto/create-order.dto';
 import { FindOrderDTO } from './dto/find-orders.dto';
 import { OrdersService } from './orders.service';
 
@@ -18,8 +19,8 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  create(@Body() createOrderDto: any) {
-    return this.ordersService.create(createOrderDto);
+  async create(@Req() req: Request, @Body() createOrderDto: CreateOrderDTO) {
+    return await this.ordersService.create(req.user.sub, createOrderDto);
   }
 
   @Get()
