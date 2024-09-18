@@ -37,4 +37,7 @@ model Users {
     
     isTwoFactorAuthEnabled Boolean @default(false)
     twoFactorSecret String?
+
+    shoppingCart ShoppingCart?
+    orders Order[]
 }
