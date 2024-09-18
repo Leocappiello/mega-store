@@ -5,4 +5,5 @@ model Order {
     createdAt DateTime @default(dbgenerated("now()"))
     products Product[]
     finalPrice Float
+    status Status[]
 }

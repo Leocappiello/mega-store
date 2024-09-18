@@ -22,6 +22,8 @@ import { SupportModule } from './support/support.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import { UtilsModule } from './utils/utils.module';
+import { AlertModule } from './alert/alert.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { UtilsModule } from './utils/utils.module';
     }),
     MailModule,
     UtilsModule,
+    AlertModule,
+    EventEmitterModule.forRoot()
   ],
   controllers: [],
   providers: [

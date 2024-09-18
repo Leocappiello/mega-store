@@ -6,13 +6,18 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { CreateOrderDTO } from './dto/create-order.dto';
 import { FindOrderDTO } from './dto/find-orders.dto';
 import { OrdersService } from './orders.service';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/auth/role.enum';
 
 @Controller('orders')
 export class OrdersController {
@@ -24,14 +29,15 @@ export class OrdersController {
   }
 
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
   async findAll(
     @Req() request: Request,
-    @Query() query: FindOrderDTO,
-    // @Query('skip', new ParseIntPipe({ errorHttpStatusCode: 400 })) skip: number,
-    // @Query('take', new ParseIntPipe({ errorHttpStatusCode: 400 })) take: number,
+    // @Query() query: FindOrderDTO
   ) {
-    const { skip, take } = query;
-    return await this.ordersService.findAll(request.user, +skip, +take);
+    // const { skip, take } = query;
+    // return await this.ordersService.findAll(request.user, +skip, +take);
+    return await this.ordersService.findAll();
   }
 
   @Get(':id')
@@ -47,5 +53,10 @@ export class OrdersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.ordersService.remove(+id);
+  }
+
+  @Put(':id')
+  async changeStatus(@Body() orderAndStatus: any) {
+    return await this.ordersService.changeStatus(orderAndStatus);
   }
 }
