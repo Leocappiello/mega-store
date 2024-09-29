@@ -40,4 +40,6 @@ model Users {
 
     shoppingCart ShoppingCart?
     orders Order[]
+    notifications Notification[]
+    feedbacks Feedback[]
 }

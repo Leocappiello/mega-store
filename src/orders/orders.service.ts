@@ -1,13 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { MailServices } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma.service';
 import { UtilsService } from 'src/utils/utils.service';
 import { CreateOrderDTO } from './dto/create-order.dto';
+import { EventEmitter } from 'stream';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly utils: UtilsService,
+    private readonly mailService: MailServices,
+    private readonly eventEmitter: EventEmitter,
   ) {}
 
   async create(user: string, createOrderDto: CreateOrderDTO) {
@@ -20,7 +28,7 @@ export class OrdersService {
       },
     });
     if (!existsProducts) throw new NotFoundException('Products not found');
-
+    this.eventEmitter.emit('order.created');
     console.log(existsProducts);
     const order = await this.prismaService.order.create({
       data: {
@@ -34,12 +42,8 @@ export class OrdersService {
     return order;
   }
 
-  async findAll(user, skip = 0, take = 5) {
-    if (!user.sub) throw new NotFoundException('User not found');
+  async findAll(skip = 0, take = 5) {
     return await this.prismaService.order.findMany({
-      where: {
-        id: user.sub,
-      },
       skip,
       take,
     });
@@ -55,5 +59,33 @@ export class OrdersService {
 
   remove(id: number) {
     return `This action removes a #${id} order`;
+  }
+
+  async changeStatus(orderAndStatus: any) {
+    const { id, status } = orderAndStatus;
+    const result = await this.prismaService.order.update({
+      where: {
+        id,
+      },
+      data: {
+        status,
+      },
+      include: {
+        owner: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+    if (!result) throw new BadRequestException('Error updating');
+
+    await this.mailService.sendMail(
+      result.owner.email,
+      'Status changed order',
+      '',
+      '',
+    );
+    return result;
   }
 }

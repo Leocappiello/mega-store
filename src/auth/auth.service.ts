@@ -4,6 +4,7 @@ import { compare } from 'bcryptjs';
 import * as speakeasy from 'speakeasy';
 import { PrismaService } from 'src/prisma.service';
 import { UsersService } from 'src/users/users.service';
+import { LoginDTO } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,14 +16,18 @@ export class AuthService {
 
   async validateUser(username: string, pass: string): Promise<any> {
     const user = await this.usersService.findOne(username);
-    if (user && (await compare(pass, user.password))) {
+    const comparePass = await compare(pass, user.password);
+    if (user && comparePass) {
       const { password, ...result } = user;
       return result;
     }
     return null;
   }
 
-  async login(user: any, ip: string, agent: any) {
+  async login(userDTO: LoginDTO, ip: string, agent: any) {
+    const { username, password } = userDTO;
+    const user = await this.validateUser(username, password);
+
     const payload = {
       username: user.username,
       sub: user.id,
@@ -39,6 +44,7 @@ export class AuthService {
     });
     return {
       access_token: this.jwtService.sign(payload),
+      role: user.role,
     };
   }
 

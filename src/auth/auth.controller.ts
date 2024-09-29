@@ -1,20 +1,20 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 
+import { Public } from './decorators/public.decorator';
+import { LoginDTO } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
-import { Public } from './guards/public.key';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // @UseGuards(AuthGuard('local'))
   @Public()
-  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Req() req: Request) {
-    return this.authService.login(req.user, req.ip, req.headers['user-agent']);
+  async login(@Req() req: Request, @Body() body: LoginDTO) {
+    return this.authService.login(body, req.ip, req.headers['user-agent']);
   }
 
   @Post('test2fa')

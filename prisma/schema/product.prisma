@@ -20,4 +20,6 @@ model Product {
     subcategoryId String?
 
     shoppingCarts ProductShoppingCart[]
+
+    alert Alert?
 }

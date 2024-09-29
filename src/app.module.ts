@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ActivitiesModule } from './activities/activities.module';
+import { AlertModule } from './alert/alert.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { CategoriesModule } from './categories/categories.module';
 import { DiscountsModule } from './discounts/discounts.module';
+import { FeedbackModule } from './feedback/feedback.module';
 import { MailModule } from './mail/mail.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
@@ -41,7 +44,7 @@ import { UtilsModule } from './utils/utils.module';
     DiscountsModule,
     RoleModule,
     PassportModule,
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.registerAsync({
       global: true,
       imports: [ConfigModule],
@@ -56,6 +59,9 @@ import { UtilsModule } from './utils/utils.module';
     }),
     MailModule,
     UtilsModule,
+    AlertModule,
+    EventEmitterModule.forRoot(),
+    FeedbackModule,
   ],
   controllers: [],
   providers: [

@@ -2,4 +2,10 @@ model Status {
     id Int @id @default(autoincrement())
     name String @unique
     products Product[]
+    active Boolean
+    order Order? @relation(fields: [orderId], references: [id])
+    orderId String?
+
+    feedback Feedback? @relation(fields: [feedbackId], references: [id])
+    feedbackId String?
 }

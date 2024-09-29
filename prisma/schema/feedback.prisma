@@ -1,0 +1,9 @@
+model Feedback {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    description String
+    status Status[]
+
+    user Users @relation(fields: [userId], references: [id])
+    userId String
+}

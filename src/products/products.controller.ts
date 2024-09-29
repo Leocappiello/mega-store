@@ -6,25 +6,26 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { Public } from 'src/auth/decorators/public.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { Public } from 'src/auth/guards/public.key';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/role.enum';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductsService } from './products.service';
 
+@UseGuards(RolesGuard)
+@Roles(Role.ADMIN)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
   async create(
     @Req() request: Request,
     @Body() createProductDto: CreateProductDto,
@@ -54,5 +55,11 @@ export class ProductsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productsService.remove(+id);
+  }
+
+  @Public()
+  @Post('/:id/purchase')
+  async purchase(@Req() req: Request, @Query('id') id: string) {
+    return await this.productsService.purchase(req.user.sub, id);
   }
 }
