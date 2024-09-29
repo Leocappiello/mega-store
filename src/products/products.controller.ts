@@ -11,8 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { Public } from 'src/auth/decorators/public.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { Public } from 'src/auth/guards/public.key';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/role.enum';
 import { CreateProductDto } from './dto/create-product.dto';

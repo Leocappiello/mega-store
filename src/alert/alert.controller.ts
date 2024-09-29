@@ -1,16 +1,18 @@
 import { Controller } from '@nestjs/common';
-import { AlertService } from './alert.service';
 import { OnEvent } from '@nestjs/event-emitter';
-import { PrismaService } from 'src/prisma.service';
+import { AlertService } from './alert.service';
 
-interface OrderCreatedEvent {}
+interface OrderCreatedEvent {
+  productId: string;
+}
 
 @Controller('alert')
 export class AlertController {
-  constructor(private readonly alertService: AlertService, private readonly prisma: PrismaService) {}
+  constructor(private readonly alertService: AlertService) {}
 
   @OnEvent('order.created')
-  purchase(payload: OrderCreatedEvent) {
-
+  async purchase(payload: OrderCreatedEvent) {
+    const { productId } = payload;
+    await this.alertService.purchase(productId);
   }
 }

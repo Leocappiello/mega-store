@@ -1,15 +1,21 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { MailServices } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma.service';
 import { UtilsService } from 'src/utils/utils.service';
 import { CreateOrderDTO } from './dto/create-order.dto';
-import { MailServices } from 'src/mail/mail.service';
+import { EventEmitter } from 'stream';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly utils: UtilsService,
-    private readonly mailService: MailServices
+    private readonly mailService: MailServices,
+    private readonly eventEmitter: EventEmitter,
   ) {}
 
   async create(user: string, createOrderDto: CreateOrderDTO) {
@@ -22,7 +28,7 @@ export class OrdersService {
       },
     });
     if (!existsProducts) throw new NotFoundException('Products not found');
-
+    this.eventEmitter.emit('order.created');
     console.log(existsProducts);
     const order = await this.prismaService.order.create({
       data: {
@@ -39,7 +45,7 @@ export class OrdersService {
   async findAll(skip = 0, take = 5) {
     return await this.prismaService.order.findMany({
       skip,
-      take
+      take,
     });
   }
 
@@ -62,15 +68,15 @@ export class OrdersService {
         id,
       },
       data: {
-        status
+        status,
       },
       include: {
         owner: {
           select: {
-            email: true
-          }
-        }
-      }
+            email: true,
+          },
+        },
+      },
     });
     if (!result) throw new BadRequestException('Error updating');
 
@@ -78,7 +84,7 @@ export class OrdersService {
       result.owner.email,
       'Status changed order',
       '',
-      ''
+      '',
     );
     return result;
   }

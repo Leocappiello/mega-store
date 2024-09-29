@@ -101,18 +101,18 @@ export class ProductsService {
   }
 
   async purchase(userId: string, productId: string) {
-    const product = await this.prismaService.product.update({
-      where: {
-        id: productId,
-      },
-      data: {
-        status: {
-            // status purchased
-        },
-        ownerId: userId,
-      }
-    });
-    if (!product) throw new NotFoundException('Product not found');
+    // const product = await this.prismaService.product.update({
+    //   where: {
+    //     id: productId,
+    //   },
+    //   data: {
+    //     status: {
+    //         // status purchased
+    //     },
+    //     ownerId: userId,
+    //   }
+    // });
+    // if (!product) throw new NotFoundException('Product not found');
     
   }
 }
