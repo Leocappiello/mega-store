@@ -17,6 +17,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/role.enum';
 import { ChangePassDTO } from './dto/ChangePass.dto';
+import { CreateUserDTO } from './dto/create-user.dto';
 import { ModifyRolesDTO } from './dto/modifyRoles.dto';
 import { UsersService } from './users.service';
 
@@ -49,7 +50,7 @@ export class UsersController {
   @Post()
   @Public()
   async create(
-    @Body() userData: Prisma.UsersCreateInput,
+    @Body() userData: CreateUserDTO,
   ): Promise<Prisma.UsersCreateInput> {
     return await this.usersService.createClient(userData);
   }

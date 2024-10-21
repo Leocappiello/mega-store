@@ -7,9 +7,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Prisma, Users } from '@prisma/client';
 import { hash } from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { MailServices } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma.service';
 import { UtilsService } from 'src/utils/utils.service';
+import { CreateUserDTO } from './dto/create-user.dto';
 import { ModifyRolesDTO } from './dto/modifyRoles.dto';
 
 @Injectable()
@@ -21,7 +23,7 @@ export class UsersService {
     private mailService: MailServices,
   ) {}
 
-  async createClient(data: Prisma.UsersCreateInput): Promise<any> {
+  async createClient(data: CreateUserDTO): Promise<any> {
     const existUser = await this.prisma.users.findFirst({
       where: {
         OR: [
@@ -35,7 +37,7 @@ export class UsersService {
       },
     });
     if (existUser) throw new ConflictException('User already exists');
-    const { name, email, username } = data;
+    const { email, username } = data;
     const hashedPassword = await hash(data.password, 10);
 
     const roleClient = await this.prisma.role.findFirstOrThrow({
@@ -43,15 +45,17 @@ export class UsersService {
         name: 'USER',
       },
     });
+
+    const userId = randomUUID();
+
     const result = await this.prisma.users.create({
       data: {
-        name,
+        id: userId,
         username,
         password: hashedPassword,
         email,
-        codeVerification: this.utilsService.generateRandomCodeVerification(
-          data.id,
-        ),
+        codeVerification:
+          this.utilsService.generateRandomCodeVerification(userId),
         active: false,
         role: {
           connect: {
@@ -62,7 +66,9 @@ export class UsersService {
     });
     delete result.password;
     // await this.mailService.sendMail(data.email, 'Activa tu cuenta', '', '');
-    return result;
+    return {
+      success: 'User successfully created',
+    };
   }
 
   // findOne(
@@ -187,16 +193,16 @@ export class UsersService {
 
     const dataChangeLogs: Prisma.DataChangeLogCreateManyInput[] = [];
 
-    if (userData.name && userData.name !== existingUser.name) {
-      dataChangeLogs.push({
-        description: 'Cambio de nombre',
-        prevValue: existingUser.name,
-        newValue: userData.name as string,
-        userId: currentUser,
-        ipAddress,
-        userAgent,
-      });
-    }
+    // if (userData.name && userData.name !== existingUser.name) {
+    //   dataChangeLogs.push({
+    //     description: 'Cambio de nombre',
+    //     prevValue: existingUser.name,
+    //     newValue: userData.name as string,
+    //     userId: currentUser,
+    //     ipAddress,
+    //     userAgent,
+    //   });
+    // }
 
     if (userData.username && userData.username !== existingUser.username) {
       dataChangeLogs.push({
