@@ -39,6 +39,17 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Public()
+  @Get()
+  async getUsersText() {
+    return [
+      {
+        id: 'prueba',
+        name: 'prueba',
+      },
+    ];
+  }
+
+  @Public()
   @Post('changePassword')
   async changePassword(
     @Query('code') code: string,
