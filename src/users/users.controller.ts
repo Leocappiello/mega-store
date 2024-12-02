@@ -41,12 +41,7 @@ export class UsersController {
   @Public()
   @Get()
   async getUsersText() {
-    return [
-      {
-        id: 'prueba',
-        name: 'prueba',
-      },
-    ];
+    return await this.usersService.getUsers();
   }
 
   @Public()

@@ -23,6 +23,28 @@ export class UsersService {
     private mailService: MailServices,
   ) {}
 
+  async getUsers(page = 0, limit = 10) {
+    return await this.prisma.users.findMany({
+      skip: page * limit,
+      take: limit,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        active: true,
+        role: {
+          include: {
+            permissions: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   async createClient(data: CreateUserDTO): Promise<any> {
     const existUser = await this.prisma.users.findFirst({
       where: {
