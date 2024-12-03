@@ -1,91 +1,172 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly prisma: PrismaService,
+  ) {}
 
-  async create(createProductDto: CreateProductDto /* , userId: string */) {
-    const available = await this.prismaService.status.findFirst({
+  // async create(createProductDto: CreateProductDto /* , userId: string */) {
+  //   const available = await this.prismaService.status.findFirst({
+  //     where: { name: 'AVAILABLE' },
+  //   });
+
+  //   if (!available) throw new Error('Status not found');
+
+  //   let subcategory = null;
+  //   if (createProductDto.subcategory) {
+  //     subcategory = await this.prismaService.subcategory.findFirst({
+  //       where: {
+  //         name: createProductDto.subcategory,
+  //       },
+  //       include: {
+  //         category: {
+  //           select: {
+  //             name: true,
+  //           },
+  //         },
+  //       },
+  //     });
+  //   }
+
+  //   const createdProduct = await this.prismaService.$transaction(
+  //     async (prisma) => {
+  //       const productData: any = {
+  //         name: createProductDto.name,
+  //         price: createProductDto.price,
+  //         description: createProductDto.description,
+  //         quantity: createProductDto.quantity,
+  //         status: {
+  //           connect: { id: available.id },
+  //         },
+  //       };
+
+  //       if (subcategory) {
+  //         productData.subcategory = {
+  //           connect: { id: subcategory.id },
+  //         };
+  //       }
+
+  //       const product = await prisma.product.create({
+  //         data: productData,
+  //         include: {
+  //           subcategory: {
+  //             select: {
+  //               name: true,
+  //               category: {
+  //                 select: {
+  //                   name: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       });
+
+  //       if (
+  //         createProductDto.imageUrls &&
+  //         createProductDto.imageUrls.length > 0
+  //       ) {
+  //         await prisma.images.createMany({
+  //           data: createProductDto.imageUrls.map((url) => ({
+  //             imageUrl: url,
+  //             productId: product.id,
+  //           })),
+  //         });
+  //       }
+
+  //       return product;
+  //     },
+  //   );
+
+  //   return createdProduct;
+  // }
+
+  async create(createProductDto: CreateProductDto) {
+    console.log('Comienza la creación del producto');
+
+    // Obtener estado disponible
+    const status = await this.prismaService.status.findFirst({
       where: { name: 'AVAILABLE' },
     });
 
-    if (!available) throw new Error('Status not found');
-
-    let subcategory = null;
-    if (createProductDto.subcategory) {
-      subcategory = await this.prismaService.subcategory.findFirst({
-        where: {
-          name: createProductDto.subcategory,
-        },
-        include: {
-          category: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      });
+    if (!status) {
+      console.log('Status no encontrado');
+      throw new Error('Status not found');
     }
+
+    console.log('Status encontrado:', status);
+
+    // Obtener subcategoría
+    const subcategory = await this.prismaService.subcategory.findFirst({
+      where: { name: createProductDto.subcategory },
+      include: { category: { select: { name: true } } },
+    });
+
+    if (!subcategory) {
+      console.log('Subcategoría no encontrada');
+      throw new Error('Subcategory not found');
+    }
+
+    console.log('Subcategoría encontrada:', subcategory);
 
     const createdProduct = await this.prismaService.$transaction(
       async (prisma) => {
-        const productData: any = {
-          name: createProductDto.name,
-          price: createProductDto.price,
-          description: createProductDto.description,
-          quantity: createProductDto.quantity,
-          status: {
-            connect: { id: available.id },
-          },
-        };
-
-        if (subcategory) {
-          productData.subcategory = {
-            connect: { id: subcategory.id },
-          };
-        }
-
         const product = await prisma.product.create({
-          data: productData,
+          data: {
+            name: createProductDto.name,
+            price: createProductDto.price,
+            description: createProductDto.description,
+            quantity: createProductDto.quantity,
+            status: { connect: { id: status.id } },
+            subcategory: { connect: { id: subcategory.id } },
+          },
           include: {
             subcategory: {
               select: {
                 name: true,
-                category: {
-                  select: {
-                    name: true,
-                  },
-                },
+                category: { select: { name: true } },
               },
             },
           },
         });
 
-        if (
-          createProductDto.imageUrls &&
-          createProductDto.imageUrls.length > 0
-        ) {
-          await prisma.images.createMany({
-            data: createProductDto.imageUrls.map((url) => ({
-              imageUrl: url,
-              productId: product.id,
-            })),
-          });
-        }
+        // Crear imágenes
+        await prisma.images.createMany({
+          data: createProductDto.imageUrls.map((url) => ({
+            imageUrl: url,
+            productId: product.id,
+          })),
+        });
 
-        return product;
+        return product; // Retorna el producto desde la transacción
       },
     );
 
-    return createdProduct;
+    console.log('Producto creado finalmente:', createdProduct);
+
+    return createdProduct; // Asegúrate de que aquí retorne el valor correcto
   }
 
-  findAll() {
-    return `This action returns all products`;
+  findAll(page = 0, limit = 10) {
+    return this.prisma.product.findMany({
+      skip: page * limit,
+      take: limit,
+    });
+  }
+
+  findAvailable(page = 0, limit = 10) {
+    return this.prisma.product.findMany({
+      skip: page * limit,
+      take: limit,
+      where: {
+        quantity: { gt: 0 },
+      },
+    });
   }
 
   findOne(id: number) {
@@ -113,6 +194,5 @@ export class ProductsService {
     //   }
     // });
     // if (!product) throw new NotFoundException('Product not found');
-    
   }
 }

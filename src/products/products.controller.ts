@@ -8,13 +8,10 @@ import {
   Post,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/role.enum';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -22,8 +19,8 @@ import { ProductsService } from './products.service';
 
 // @UseGuards(RolesGuard)
 
+// @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
@@ -39,10 +36,15 @@ export class ProductsController {
     );
   }
 
-  @Get()
-  @Public()
+  @Get('/all')
   findAll() {
     return this.productsService.findAll();
+  }
+
+  @Get()
+  @Public()
+  findAvailable() {
+    return this.productsService.findAvailable();
   }
 
   @Get(':id')

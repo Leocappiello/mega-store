@@ -8,6 +8,7 @@ import { ActivitiesModule } from './activities/activities.module';
 import { AlertModule } from './alert/alert.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
 import { CategoriesModule } from './categories/categories.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { FeedbackModule } from './feedback/feedback.module';
@@ -70,6 +71,10 @@ import { UtilsModule } from './utils/utils.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
   exports: [PassportModule, JwtModule],

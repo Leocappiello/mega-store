@@ -28,7 +28,7 @@ interface JwtPayload {
 
 declare module 'express' {
   export interface Request {
-    user?: JwtPayload; // Define la propiedad `user` que puede tener el tipo `JwtPayload`
+    user?: JwtPayload;
   }
 }
 
