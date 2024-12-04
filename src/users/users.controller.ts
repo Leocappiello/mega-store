@@ -28,7 +28,7 @@ interface JwtPayload {
 
 declare module 'express' {
   export interface Request {
-    user?: JwtPayload; // Define la propiedad `user` que puede tener el tipo `JwtPayload`
+    user?: JwtPayload;
   }
 }
 
@@ -37,6 +37,12 @@ declare module 'express' {
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Public()
+  @Get()
+  async getUsersText() {
+    return await this.usersService.getUsers();
+  }
 
   @Public()
   @Post('changePassword')

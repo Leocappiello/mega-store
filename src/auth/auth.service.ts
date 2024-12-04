@@ -28,6 +28,8 @@ export class AuthService {
     const { username, password } = userDTO;
     const user = await this.validateUser(username, password);
 
+    if (!user) throw new NotFoundException('User not found');
+
     const payload = {
       username: user.username,
       sub: user.id,

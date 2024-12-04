@@ -75,5 +75,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
       // 💡 See this condition
       return true;
     }
+    //
+    return super.canActivate(context) as Promise<boolean>;
   }
 }
