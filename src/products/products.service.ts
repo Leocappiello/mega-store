@@ -166,11 +166,27 @@ export class ProductsService {
       where: {
         quantity: { gt: 0 },
       },
+      include: {
+        imagesUrls: true,
+      },
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  findOne(id: string) {
+    return this.prisma.product.findFirstOrThrow({
+      where: {
+        id,
+        quantity: { gt: 0 },
+      },
+      include: {
+        imagesUrls: true,
+        subcategory: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {
