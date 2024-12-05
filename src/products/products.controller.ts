@@ -48,8 +48,9 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
-    return this.productsService.findOne(+id);
+    return this.productsService.findOne(id);
   }
 
   @Patch(':id')
